@@ -24,6 +24,7 @@ public class DJISampleApplication extends Application {
     private static BluetoothProductConnector bluetoothConnector = null;
     private static Bus bus = new Bus(ThreadEnforcer.ANY);
     private static Application app = null;
+    private static Context context;
 
     /**
      * Gets instance of the specific product connected after the
@@ -76,7 +77,11 @@ public class DJISampleApplication extends Application {
         MultiDex.install(this);
         com.secneo.sdk.Helper.install(this);
         app = this;
+        context=this;
     }
 
+    public static Context getContext(){
+        return  context;
+    }
 
 }

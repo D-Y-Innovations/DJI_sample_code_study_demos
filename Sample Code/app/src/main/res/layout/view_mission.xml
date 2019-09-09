@@ -93,6 +93,7 @@
         style="@style/common_button"/>
 
 
+
     <Button
         android:id="@+id/btn_download"
         android:layout_below="@id/btn_pause"
@@ -101,6 +102,32 @@
         android:text="Download"
         style="@style/common_button"/>
 
+    <Button
+        android:id="@+id/btn_myLoad"
+        android:layout_toLeftOf="@id/btn_myUpLoad"
+        android:layout_below="@id/btn_download"
+        android:text="MyLoad"
+        style="@style/common_button"/>
+    <Button
+        android:id="@+id/btn_myUpLoad"
+        android:layout_below="@id/btn_download"
+        android:layout_centerHorizontal="true"
+        android:layout_margin="10dp"
+        android:text="MyUpload"
+        style="@style/common_button"/>
+    <Button
+        android:id="@+id/btn_myStart"
+        android:layout_below="@id/btn_download"
+        android:layout_toRightOf="@id/btn_myUpLoad"
+        android:text="MyStart"
+        style="@style/common_button"/>
+
+    <Button
+        android:id="@+id/btn_myStop"
+        android:layout_below="@id/btn_download"
+        android:layout_centerHorizontal="true"
+        android:text="MyStop"
+        style="@style/common_button"/>
 
     <ProgressBar
         android:id="@+id/pb_mission"

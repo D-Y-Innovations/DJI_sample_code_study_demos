@@ -1,13 +1,19 @@
 package com.dji.sdk.sample.demo.missionoperator;
 
 import android.content.Context;
+import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
+
 import com.dji.sdk.sample.R;
 import com.dji.sdk.sample.demo.missionmanager.MissionBaseView;
 import com.dji.sdk.sample.internal.controller.DJISampleApplication;
+import com.dji.sdk.sample.internal.controller.MainActivity;
+import com.dji.sdk.sample.internal.controller.MyWayPointMissionActivity;
+import com.dji.sdk.sample.internal.model.FileInput;
 import com.dji.sdk.sample.internal.utils.ToastUtils;
 import dji.common.error.DJIError;
 import dji.common.flightcontroller.FlightControllerState;
@@ -34,6 +40,8 @@ import dji.sdk.mission.MissionControl;
 import dji.sdk.mission.waypoint.WaypointMissionOperator;
 import dji.sdk.mission.waypoint.WaypointMissionOperatorListener;
 import dji.sdk.products.Aircraft;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -49,6 +57,8 @@ public class WaypointMissionOperatorView extends MissionBaseView {
     private static final double ONE_METER_OFFSET = 0.00000899322;
     private static final String TAG = WaypointMissionOperatorView.class.getSimpleName();
     private WaypointMissionOperator waypointMissionOperator;
+    private WaypointMission mWaypointMission;
+    private WaypointMissionOperator mWaypointMissionOperator;
     private WaypointMission mission;
     private WaypointMissionOperatorListener listener;
     private final int WAYPOINT_COUNT = 5;
@@ -102,7 +112,6 @@ public class WaypointMissionOperatorView extends MissionBaseView {
                 mission = createRandomWaypointMission(WAYPOINT_COUNT, 1);
                 DJIError djiError = waypointMissionOperator.loadMission(mission);
                 showResultToast(djiError);
-
                 break;
 
             case R.id.btn_upload:
@@ -173,6 +182,98 @@ public class WaypointMissionOperatorView extends MissionBaseView {
                     ToastUtils.setResultToToast("Mission can be downloaded when the mission state is EXECUTING or EXECUTION_PAUSED!");
                 }
                 break;
+                //自己写的加载数据
+            case R.id.btn_myLoad:
+                WaypointMissionOperatorTool waypointMissionOperatorTool = new WaypointMissionOperatorTool();
+                String txt = "{\n" +
+                        "   \"startPosition\": {\n" +
+                        "        \"absoluteAltitude\": 76.54328155517578,\n" +
+                        "        \"gimbalPitch\": 0,\n" +
+                        "        \"lat\": 22.589992518798812,\n" +
+                        "        \"lon\": 113.98004457818286,\n" +
+                        "        \"yaw\": 0\n" +
+                        "    },\n" +
+                        "    \"gpsList\": [\n" +
+                        "        {\n" +
+                        "            \"absoluteAltitude\": 76.08706665039062,\n" +
+                        "            \"gimbalPitch\": -71.4000015258789,\n" +
+                        "            \"lat\": 22.589784056531727,\n" +
+                        "            \"lon\": 113.98036856346226,\n" +
+                        "            \"shootPhoto\": 1,\n" +
+                        "            \"yaw\": 134.20000004768372\n" +
+                        "        },\n" +
+                        "        {\n" +
+                        "            \"absoluteAltitude\": 76.23529815673828,\n" +
+                        "            \"gimbalPitch\": -75.80000305175781,\n" +
+                        "            \"lat\": 22.589431030194767,\n" +
+                        "            \"lon\": 113.98069291229368,\n" +
+                        "            \"shootPhoto\": 1,\n" +
+                        "            \"yaw\": 155.70000004768372\n" +
+                        "        },\n" +
+                        "        {\n" +
+                        "            \"absoluteAltitude\": 76.06767272949219,\n" +
+                        "            \"gimbalPitch\": -76.9000015258789,\n" +
+                        "            \"lat\": 22.58931317982019,\n" +
+                        "            \"lon\": 113.98039819095852,\n" +
+                        "            \"shootPhoto\": 1,\n" +
+                        "            \"yaw\": 154.59999990463257\n" +
+                        "        }\n" +
+                        "    ],\n" +
+                        "    \"endPosition\": {\n" +
+                        "        \"absoluteAltitude\": 76.25504302978516,\n" +
+                        "        \"gimbalPitch\": -76.9000015258789,\n" +
+                        "        \"lat\": 22.58946024179878,\n" +
+                        "        \"lon\": 113.98026310755915,\n" +
+                        "        \"yaw\": 126\n" +
+                        "    }\n" +
+                        "  \n" +
+                        "}";
+                List<Waypoint> mList = waypointMissionOperatorTool.getDjiWayPointFromMyWayPoints(txt);
+                mWaypointMission = waypointMissionOperatorTool.ctreateWaypointMission(mList);
+                DJIError mDjiError = waypointMissionOperator.loadMission(mWaypointMission);
+                showResultToast(mDjiError);
+                break;
+                //自己写的上传数据
+            case R.id.btn_myUpLoad:
+                if (WaypointMissionState.READY_TO_RETRY_UPLOAD.equals(waypointMissionOperator.getCurrentState())
+                        || WaypointMissionState.READY_TO_UPLOAD.equals(waypointMissionOperator.getCurrentState())) {
+                    waypointMissionOperator.uploadMission(new CommonCallbacks.CompletionCallback() {
+                        @Override
+                        public void onResult(DJIError djiError) {
+                            String djiErrorString  = djiError == null ? "Action started!" : djiError.getDescription();
+                            Log.e("未能成功上传：",djiErrorString);
+                        }
+                    });
+                }else {
+                    ToastUtils.setResultToToast("请先准备好路点任务！");
+                }
+                //自己写的开始巡航
+            case R.id.btn_myStart:
+                if (null != mWaypointMission) {
+                    waypointMissionOperator.startMission(new CommonCallbacks.CompletionCallback() {
+                        @Override
+                        public void onResult(DJIError djiError) {
+                            String djiErrorString  = djiError == null ? "Action started!" : djiError.getDescription();
+                            Log.e("未能开始任务：",djiErrorString);
+                        }
+                    });
+                } else {
+//                    Toast.makeText(this,"请先准备好路点任务！",Toast.LENGTH_LONG).show();
+                    ToastUtils.setResultToToast("开始任务之前请先准备好路点任务！");
+                }
+                if (mWaypointMission != null) {
+                    waypointMissionOperator.startMission(new CommonCallbacks.CompletionCallback() {
+                        @Override
+                        public void onResult(DJIError djiError) {
+                            showResultToast(djiError);
+                        }
+                    });
+                } else {
+                    ToastUtils.setResultToToast("Prepare Mission First!");
+                }
+                break;
+
+
             default:
                 break;
         }

@@ -295,5 +295,6 @@
     <string name="fetch_file_list">Fetch File List</string>
     <string name="cancel_transmitting">Cancel Transmitting</string>
     <string name="transmit_local_file">Transmit Local File</string>
+    <string name="title_activity_my_test">MyTestActivity</string>
 
 </resources>
