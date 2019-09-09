@@ -1,4 +1,4 @@
-# DJI Mobile SDK for Android
+# Not the original DJI Mobile SDK for Android.
 
 ## What Is This?
 
