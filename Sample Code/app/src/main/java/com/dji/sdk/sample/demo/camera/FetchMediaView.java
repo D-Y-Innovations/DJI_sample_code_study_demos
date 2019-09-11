@@ -128,6 +128,8 @@ public class FetchMediaView extends BaseThreeBtnView {
             taskScheduler.moveTaskToEnd(new FetchMediaTask(media,
                     FetchMediaTaskContent.THUMBNAIL,
                     fetchMediaFileTaskCallback));
+
+
         }
     }
 
@@ -144,15 +146,24 @@ public class FetchMediaView extends BaseThreeBtnView {
         }
     }
 
+    //下载
     @Override
     protected void handleRightBtnClick() {
         // Fetch Media Data Button
         if (ModuleVerificationUtil.isCameraModuleAvailable()
                 && media != null
                 && mediaManager != null) {
-            File destDir = new File(Environment.getExternalStorageDirectory().
+            final File destDir = new File(Environment.getExternalStorageDirectory().
                     getPath() + "/Dji_Sdk_Test/");
             media.fetchFileData(destDir, "testName", new DownloadHandler<String>());
+            media.fetchPreview(new CommonCallbacks.CompletionCallback() {
+                @Override
+                public void onResult(DJIError djiError) {
+                    if(djiError == null){
+                        Bitmap bitmap = media.getPreview();
+                    }
+                }
+            });
         }
     }
 
