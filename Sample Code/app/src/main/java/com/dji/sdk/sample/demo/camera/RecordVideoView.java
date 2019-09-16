@@ -1,6 +1,7 @@
 package com.dji.sdk.sample.demo.camera;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.dji.sdk.sample.R;
 import com.dji.sdk.sample.internal.controller.DJISampleApplication;
@@ -114,6 +115,9 @@ public class RecordVideoView extends BaseThreeBtnView {
                                         changeDescription(time);
                                     }
                                 }, 0, 1);
+                            }else{
+                                ToastUtils.setResultToToast("Start Record Error");
+                                Log.e("StartRecordError",djiError.getDescription());
                             }
                         }
                     });

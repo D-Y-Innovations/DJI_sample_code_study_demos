@@ -124,7 +124,7 @@
 
     <Button
         android:id="@+id/btn_myStop"
-        android:layout_below="@id/btn_download"
+        android:layout_below="@id/btn_myUpLoad"
         android:layout_centerHorizontal="true"
         android:text="MyStop"
         style="@style/common_button"/>

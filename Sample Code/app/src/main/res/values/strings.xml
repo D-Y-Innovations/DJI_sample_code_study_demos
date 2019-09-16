@@ -297,4 +297,15 @@
     <string name="transmit_local_file">Transmit Local File</string>
     <string name="title_activity_my_test">MyTestActivity</string>
 
+
+    <!-- my demos String -->
+    <string name="my_demos">My Demos</string>
+    <string name="my_record_video">My Record Video</string>
+    <string name="my_start_record">My Start Record</string>
+    <string name="my_stop_record">My Stop Record</string>
+    <string name="my_download_record">Reset SD Files</string>
+    <string name="my_shoot_single_photo_view">My Shoot Single Photo View</string>
+    <string name="my_shoot_photo_button">Shoot Photo</string>
+    <string name="my_download_photo_button">Download Photo</string>
+
 </resources>

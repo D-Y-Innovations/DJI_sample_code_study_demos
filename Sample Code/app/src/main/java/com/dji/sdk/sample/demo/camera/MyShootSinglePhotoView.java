@@ -1,25 +1,40 @@
 package com.dji.sdk.sample.demo.camera;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.os.Environment;
 import android.util.Log;
 
 import com.dji.sdk.sample.R;
 import com.dji.sdk.sample.internal.controller.DJISampleApplication;
+import com.dji.sdk.sample.internal.utils.DownUtil;
+import com.dji.sdk.sample.internal.utils.DownloadHandler;
+import com.dji.sdk.sample.internal.utils.ModuleVerificationUtil;
 import com.dji.sdk.sample.internal.utils.ToastUtils;
 import com.dji.sdk.sample.internal.view.BaseThreeBtnView;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.List;
 
 import dji.common.camera.SettingsDefinitions;
 import dji.common.error.DJIError;
 import dji.common.util.CommonCallbacks;
+import dji.sdk.media.MediaFile;
+import dji.sdk.media.MediaManager;
 
 /**
  * Class for shooting single photo.
  */
-public class ShootSinglePhotoView extends BaseThreeBtnView {
+public class MyShootSinglePhotoView extends BaseThreeBtnView {
 
+    private MediaFile mediaFile;
+    private MediaManager mediaManager;
     private Context context;
 
-    public ShootSinglePhotoView(Context context) {
+    public MyShootSinglePhotoView(Context context) {
         super(context);
         this.context = context;
     }
@@ -45,6 +60,13 @@ public class ShootSinglePhotoView extends BaseThreeBtnView {
                                 }
                             });
         }
+        if (ModuleVerificationUtil.isCameraModuleAvailable()) {
+            if (ModuleVerificationUtil.isMediaManagerAvailable()) {
+                if (mediaManager == null) {
+                    mediaManager = DJISampleApplication.getProductInstance().getCamera().getMediaManager();
+                }
+            }
+        }
     }
 
     private boolean isModuleAvailable() {
@@ -54,7 +76,7 @@ public class ShootSinglePhotoView extends BaseThreeBtnView {
 
     @Override
     protected int getLeftBtnTextResourceId() {
-        return DISABLE;
+        return R.string.my_shoot_photo_button;
     }
 
     @Override
@@ -62,13 +84,14 @@ public class ShootSinglePhotoView extends BaseThreeBtnView {
         return getDescription();
     }
 
+    //拍照
     @Override
     protected void handleLeftBtnClick() {
+        shootPhoto();
 
     }
 
-    @Override
-    protected void handleMiddleBtnClick() {
+    public void shootPhoto() {
         //Shoot Photo Button
         if (isModuleAvailable()) {
             post(new Runnable() {
@@ -100,17 +123,38 @@ public class ShootSinglePhotoView extends BaseThreeBtnView {
     }
 
     @Override
+    protected void handleMiddleBtnClick() {
+
+    }
+
+    //下载SD卡上的所有照片
+    @Override
     protected void handleRightBtnClick() {
+        if (ModuleVerificationUtil.isCameraModuleAvailable()
+                && mediaFile != null
+                && mediaManager != null){
+
+                final File destDir = new File(Environment.getExternalStorageDirectory().
+                        getPath() + "/Dji_Sdk_MyTest/");
+
+                List<MediaFile> mediaFiles = mediaManager.getSDCardFileListSnapshot();
+                int i = 0;
+                for(final MediaFile mediaFile : mediaFiles){
+                    mediaFile.fetchFileData(destDir,mediaFile.getFileName(),new DownloadHandler<String>());
+                    i++;
+                    ToastUtils.setResultToToast("下载完成第"+i+"份(图片)/（视频）！");
+                }
+        }
     }
 
     @Override
     protected int getRightBtnTextResourceId() {
-        return DISABLE;
+        return R.string.my_download_photo_button;
     }
 
     @Override
     protected int getMiddleBtnTextResourceId() {
-        return R.string.shoot_single_photo;
+        return DISABLE;
     }
 
     @Override

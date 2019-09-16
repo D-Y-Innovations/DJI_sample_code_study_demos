@@ -11,6 +11,8 @@ import com.dji.sdk.sample.internal.utils.ModuleVerificationUtil;
 import com.dji.sdk.sample.internal.utils.ToastUtils;
 import com.dji.sdk.sample.internal.view.BaseThreeBtnView;
 
+import dji.common.error.DJICameraError;
+import dji.sdk.media.DownloadListener;
 import dji.sdk.media.FetchMediaTask;
 import dji.sdk.media.FetchMediaTaskContent;
 import dji.sdk.media.FetchMediaTaskScheduler;
@@ -22,6 +24,7 @@ import dji.common.camera.SettingsDefinitions;
 import dji.common.error.DJIError;
 import dji.common.util.CommonCallbacks;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 /**
  * Class for fetching the media.
@@ -154,14 +157,34 @@ public class FetchMediaView extends BaseThreeBtnView {
                 && media != null
                 && mediaManager != null) {
             final File destDir = new File(Environment.getExternalStorageDirectory().
-                    getPath() + "/Dji_Sdk_Test/");
+                    getPath() + "/Dji_Sdk_myTest/");
+            List<MediaFile> mediaFiles = mediaManager.getSDCardFileListSnapshot();
+            //下载SD上的全部文件
+            int i = 0;
+            for(final MediaFile mediaFile : mediaFiles){
+                mediaFile.fetchFileData(destDir, mediaFile.getFileName(), new DownloadHandler<String>() {
+                });
+                i++;
+                ToastUtils.setResultToToast("下载到第"+i+"文件！");
+            }
+            //reset SD
+//            mediaManager.deleteFiles(mediaFiles, new CommonCallbacks.CompletionCallbackWithTwoParam<List<MediaFile>, DJICameraError>() {
+//                @Override
+//                public void onSuccess(List<MediaFile> mediaFiles, DJICameraError djiCameraError) {
+//                    ToastUtils.setResultToToast("重置成功！"+djiCameraError);
+//                }
+//
+//                @Override
+//                public void onFailure(DJIError djiError) {
+//                    ToastUtils.setResultToToast("重置失败！"+djiError);
+//                }
+//            });
+
             media.fetchFileData(destDir, "testName", new DownloadHandler<String>());
             media.fetchPreview(new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
-                    if(djiError == null){
-                        Bitmap bitmap = media.getPreview();
-                    }
+
                 }
             });
         }

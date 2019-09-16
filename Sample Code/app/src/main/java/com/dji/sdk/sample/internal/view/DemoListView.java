@@ -16,6 +16,8 @@ import com.dji.sdk.sample.demo.battery.SetGetDischargeDayView;
 import com.dji.sdk.sample.demo.camera.FetchMediaView;
 import com.dji.sdk.sample.demo.camera.LiveStreamView;
 import com.dji.sdk.sample.demo.camera.MediaPlaybackView;
+import com.dji.sdk.sample.demo.camera.MyRecordVideoView;
+import com.dji.sdk.sample.demo.camera.MyShootSinglePhotoView;
 import com.dji.sdk.sample.demo.camera.PlaybackCommandsView;
 import com.dji.sdk.sample.demo.camera.PlaybackDownloadView;
 import com.dji.sdk.sample.demo.camera.PlaybackPushInfoView;
@@ -165,6 +167,15 @@ public class DemoListView extends FrameLayout {
                                        PushRemoteControllerDataView.class),
                          new GroupItem(R.string.component_listview_mobile_remote_controller,
                                        MobileRemoteControllerView.class));
+        //My demos Group
+        builder.addGroup(R.string.my_demos,
+                false,
+                new GroupItem(R.string.my_record_video,
+                        MyRecordVideoView.class),
+                new GroupItem(R.string.my_shoot_single_photo_view,
+                        MyShootSinglePhotoView.class)
+        );
+
 
         // Set-up ExpandableListView
         expandableListView = (ExpandableListView) view.findViewById(R.id.expandable_list);

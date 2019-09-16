@@ -117,7 +117,9 @@ public class PlaybackDownloadView extends BaseThreeBtnView {
         if (ModuleVerificationUtil.isPlaybackAvailable()) {
             playbackManager = DJISampleApplication.getProductInstance().getCamera().getPlaybackManager();
 
+
             playbackManager.toggleFileSelectionAtIndex(0);
+
         }
     }
 
