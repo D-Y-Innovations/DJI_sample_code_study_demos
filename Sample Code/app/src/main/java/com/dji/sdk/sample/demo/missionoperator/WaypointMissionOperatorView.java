@@ -2,6 +2,7 @@ package com.dji.sdk.sample.demo.missionoperator;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -9,11 +10,13 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.dji.sdk.sample.R;
+import com.dji.sdk.sample.demo.camera.FetchMediaView;
 import com.dji.sdk.sample.demo.missionmanager.MissionBaseView;
 import com.dji.sdk.sample.internal.controller.DJISampleApplication;
 import com.dji.sdk.sample.internal.controller.MainActivity;
 import com.dji.sdk.sample.internal.controller.MyWayPointMissionActivity;
 import com.dji.sdk.sample.internal.model.FileInput;
+import com.dji.sdk.sample.internal.utils.DownloadHandler;
 import com.dji.sdk.sample.internal.utils.ModuleVerificationUtil;
 import com.dji.sdk.sample.internal.utils.ToastUtils;
 
@@ -39,11 +42,15 @@ import dji.sdk.base.BaseProduct;
 import dji.keysdk.FlightControllerKey;
 import dji.keysdk.KeyManager;
 import dji.sdk.flightcontroller.FlightController;
+import dji.sdk.media.FetchMediaTaskScheduler;
+import dji.sdk.media.MediaFile;
+import dji.sdk.media.MediaManager;
 import dji.sdk.mission.MissionControl;
 import dji.sdk.mission.waypoint.WaypointMissionOperator;
 import dji.sdk.mission.waypoint.WaypointMissionOperatorListener;
 import dji.sdk.products.Aircraft;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -61,10 +68,15 @@ public class WaypointMissionOperatorView extends MissionBaseView {
     private static final String TAG = WaypointMissionOperatorView.class.getSimpleName();
     private WaypointMissionOperator waypointMissionOperator;
     private WaypointMission mWaypointMission;
-    private WaypointMissionOperator mWaypointMissionOperator;
     private WaypointMission mission;
     private WaypointMissionOperatorListener listener;
+    private WaypointMissionOperatorListener mlistener;
     private final int WAYPOINT_COUNT = 5;
+
+    private MediaManager mediaManager;
+    private List<MediaFile> oldMediaFiles;
+    private List<MediaFile> latestMediaFiles;
+    private FetchMediaTaskScheduler taskScheduler;
 
     public WaypointMissionOperatorView(Context context) {
         super(context);
@@ -203,7 +215,7 @@ public class WaypointMissionOperatorView extends MissionBaseView {
                         "    \"gpsList\": [\n" +
                         "        {\n" +
                         "            \"absoluteAltitude\": 76.08706665039062,\n" +
-                        "            \"gimbalPitch\": -71.4000015258789,\n" +
+                        "            \"gimbalPitch\": -90.4000015258789,\n" +
                         "            \"lat\": 22.589784056531727,\n" +
                         "            \"lon\": 113.98036856346226,\n" +
                         "            \"shootPhoto\": 0,\n" +
@@ -211,7 +223,7 @@ public class WaypointMissionOperatorView extends MissionBaseView {
                         "        },\n" +
                         "        {\n" +
                         "            \"absoluteAltitude\": 76.23529815673828,\n" +
-                        "            \"gimbalPitch\": -75.80000305175781,\n" +
+                        "            \"gimbalPitch\": -180.80000305175781,\n" +
                         "            \"lat\": 22.589431030194767,\n" +
                         "            \"lon\": 113.98069291229368,\n" +
                         "            \"shootPhoto\": 0,\n" +
@@ -219,7 +231,7 @@ public class WaypointMissionOperatorView extends MissionBaseView {
                         "        },\n" +
                         "        {\n" +
                         "            \"absoluteAltitude\": 76.06767272949219,\n" +
-                        "            \"gimbalPitch\": -76.9000015258789,\n" +
+                        "            \"gimbalPitch\": -90.9000015258789,\n" +
                         "            \"lat\": 22.58931317982019,\n" +
                         "            \"lon\": 113.98039819095852,\n" +
                         "            \"shootPhoto\": 0,\n" +
@@ -228,7 +240,7 @@ public class WaypointMissionOperatorView extends MissionBaseView {
                         "    ],\n" +
                         "    \"endPosition\": {\n" +
                         "        \"absoluteAltitude\": 76.25504302978516,\n" +
-                        "        \"gimbalPitch\": -76.9000015258789,\n" +
+                        "        \"gimbalPitch\": 0.9000015258789,\n" +
                         "        \"lat\": 22.58946024179878,\n" +
                         "        \"lon\": 113.98026310755915,\n" +
                         "        \"yaw\": 126\n" +
@@ -257,50 +269,8 @@ public class WaypointMissionOperatorView extends MissionBaseView {
                 break;
                 //自己写的开始巡航
             case R.id.btn_myStart:
-                if (ModuleVerificationUtil.isCameraModuleAvailable()) {
-                    DJISampleApplication.getProductInstance()
-                            .getCamera()
-                            .setMode(SettingsDefinitions.CameraMode.RECORD_VIDEO, new CommonCallbacks.CompletionCallback() {
-                                @Override
-                                public void onResult(DJIError djiError) {
-                                    try {
-                                        Thread.sleep(1000);
-                                    } catch (InterruptedException e) {
-                                        e.printStackTrace();
-                                    }
-                                    ToastUtils.setResultToToast("SetCameraMode to recordVideo");
-                                    DJISampleApplication.getProductInstance()
-                                            .getCamera()
-                                            .startRecordVideo(new CommonCallbacks.CompletionCallback() {
-                                                @Override
-                                                public void onResult(DJIError djiError) {
-                                                    if (djiError == null) {
-                                                        try {
-                                                            Thread.sleep(1000);
-                                                        } catch (InterruptedException e) {
-                                                            e.printStackTrace();
-                                                        }
-                                                        if (mWaypointMission != null) {
-                                                            waypointMissionOperator.startMission(new CommonCallbacks.CompletionCallback() {
-                                                                @Override
-                                                                public void onResult(DJIError djiError) {
-                                                                    showResultToast(djiError);
-                                                                }
-                                                            });
-                                                        } else {
-                                                            ToastUtils.setResultToToast("Prepare Mission First!");
-                                                        }
-
-                                                        ToastUtils.setResultToToast("正常开始录制！");
-                                                    } else {
-                                                        ToastUtils.setResultToToast("开始录制异常！" + djiError.getDescription());
-                                                    }
-                                                }
-                                            });
-                                }
-
-                            });
-                }
+                record();
+//                startMission();
                 break;
             case R.id.btn_myStop:
                 ToastUtils.setResultToToast("停止！");
@@ -308,58 +278,234 @@ public class WaypointMissionOperatorView extends MissionBaseView {
                     @Override
                     public void onResult(DJIError djiError) {
                         if(djiError == null){
+                            try {
+                                Thread.sleep(1000);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
                             ToastUtils.setResultToToast("正常停止任务！");
-//                            if (ModuleVerificationUtil.isCameraModuleAvailable()) {
-//                                DJISampleApplication.getProductInstance()
-//                                        .getCamera()
-//                                        .stopRecordVideo(new CommonCallbacks.CompletionCallback() {
-//                                            @Override
-//                                            public void onResult(DJIError djiError) {
-//                                                if(djiError == null){
-//                                                    ToastUtils.setResultToToast("正常停止录制！");
-//                                                }else{
-//                                                    ToastUtils.setResultToToast("停止录制报错！"+djiError);
-//                                                }
-//                                            }
-//                                        });
-//                            }
+                            stopRecord();
                         }else {
                             ToastUtils.setResultToToast("停止任务报错！"+djiError);
                         }
                     }
                 });
-
-                if (ModuleVerificationUtil.isCameraModuleAvailable()) {
-                    DJISampleApplication.getProductInstance()
-                            .getCamera()
-                            .setMode(SettingsDefinitions.CameraMode.SHOOT_PHOTO,
-                                    new CommonCallbacks.CompletionCallback() {
-                                        @Override
-                                        public void onResult(DJIError djiError) {
-                                            ToastUtils.setResultToToast("SetCameraMode to shootPhoto");
-                                        }
-                                    });
-                    DJISampleApplication.getProductInstance()
-                            .getCamera()
-                            .stopRecordVideo(new CommonCallbacks.CompletionCallback() {
-                                @Override
-                                public void onResult(DJIError djiError) {
-                                    if(djiError == null){
-                                        ToastUtils.setResultToToast("正常停止录制！");
-                                    }else{
-                                        ToastUtils.setResultToToast("停止录制报错！"+djiError);
-                                    }
-                                }
-                            });
-                }
-
+                stopRecord();
                 break;
 
+            case R.id.btn_myAutoMission:
+
+                //获取当前SD卡中的文件
+                oldMediaFiles = mediaManager.getSDCardFileListSnapshot();
+                //1.设置相机为录制模式
+                if(ModuleVerificationUtil.isCameraModuleAvailable()){
+                    DJISampleApplication.getProductInstance().getCamera()
+                            .setMode(SettingsDefinitions.CameraMode.RECORD_VIDEO, new CommonCallbacks.CompletionCallback() {
+                        @Override
+                        public void onResult(DJIError djiError) {
+                            try {
+                                Thread.sleep(1000);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            if(djiError == null){
+                                //2.开始录制
+                                DJISampleApplication.getProductInstance().getCamera()
+                                        .startRecordVideo(new CommonCallbacks.CompletionCallback() {
+                                    @Override
+                                    public void onResult(DJIError djiError) {
+                                        try {
+                                            Thread.sleep(1000);
+                                        } catch (InterruptedException e) {
+                                            e.printStackTrace();
+                                        }
+                                        if(djiError == null){
+                                            //3.开始任务
+                                            if(mWaypointMission != null){
+                                                waypointMissionOperator.startMission(new CommonCallbacks.CompletionCallback() {
+                                                    @Override
+                                                    public void onResult(DJIError djiError) {
+                                                        if(djiError == null){
+                                                            ToastUtils.setResultToToast("成功开始任务！");
+                                                        }else {
+                                                            ToastUtils.setResultToToast("开始任务失败！"+djiError.getDescription());
+                                                        }
+
+                                                    }
+                                                });
+                                            }else {
+                                                ToastUtils.setResultToToast("请先准备好路点任务！");
+                                            }
+                                        }else {
+                                            ToastUtils.setResultToToast("开始录制失败"+djiError.getDescription());
+                                        }
+                                    }
+                                });
+
+                            }
+                        }
+                    });
+                }
+                mlistener = new WaypointMissionOperatorListener() {
+                    @Override
+                    public void onDownloadUpdate(@NonNull WaypointMissionDownloadEvent waypointMissionDownloadEvent) {
+
+                    }
+
+                    @Override
+                    public void onUploadUpdate(@NonNull WaypointMissionUploadEvent waypointMissionUploadEvent) {
+
+                    }
+
+                    @Override
+                    public void onExecutionUpdate(@NonNull WaypointMissionExecutionEvent waypointMissionExecutionEvent) {
+
+                    }
+
+                    @Override
+                    public void onExecutionStart() {
+
+                    }
+
+                    @Override
+                    public void onExecutionFinish(@Nullable DJIError djiError) {
+                        if (ModuleVerificationUtil.isMediaManagerAvailable()) {
+                            if (mediaManager == null) {
+                                mediaManager = DJISampleApplication.getProductInstance().getCamera().getMediaManager();
+                            }
+                        }
+                        //自动开始下载任务
+                        latestMediaFiles = mediaManager.getInternalStorageFileListSnapshot();
+                        latestMediaFiles.removeAll(oldMediaFiles);
+                        if (taskScheduler == null) {
+                            taskScheduler = mediaManager.getScheduler();
+                            if (taskScheduler != null && taskScheduler.getState() == FetchMediaTaskScheduler.FetchMediaTaskSchedulerState.SUSPENDED) {
+                                taskScheduler.resume(new CommonCallbacks.CompletionCallback() {
+                                    @Override
+                                    public void onResult(DJIError djiError) {
+
+                                        if (djiError != null) {
+                                            ToastUtils.setResultToToast("taskScheduler resume failed: " + djiError.getDescription());
+                                        }
+
+                                    }
+                                });
+                            }
+                        }
+                        DJISampleApplication.getProductInstance()
+                                .getCamera()
+                                .setMode(SettingsDefinitions.CameraMode.MEDIA_DOWNLOAD,
+                                        new CommonCallbacks.CompletionCallback() {
+                                            @Override
+                                            public void onResult(DJIError djiError) {
+                                                if (null == djiError) {
+                                                   downloadLatestFiles(latestMediaFiles);
+                                                }
+                                            }
+                                        });
+                    }
+                };
+                break;
             default:
                 break;
         }
     }
+
+    private void stopRecord() {
+        if (ModuleVerificationUtil.isCameraModuleAvailable()) {
+            DJISampleApplication.getProductInstance()
+                    .getCamera()
+                    .stopRecordVideo(new CommonCallbacks.CompletionCallback() {
+                        @Override
+                        public void onResult(DJIError djiError) {
+                            if(djiError == null){
+
+                                ToastUtils.setResultToToast("正常停止录制！");
+                                if (ModuleVerificationUtil.isCameraModuleAvailable()) {
+                                    DJISampleApplication.getProductInstance()
+                                            .getCamera()
+                                            .setMode(SettingsDefinitions.CameraMode.SHOOT_PHOTO,
+                                                    new CommonCallbacks.CompletionCallback() {
+                                                        @Override
+                                                        public void onResult(DJIError djiError) {
+                                                            ToastUtils.setResultToToast("SetCameraMode to shootPhoto");
+                                                        }
+                                                    });
+                                }
+                            }else{
+                                ToastUtils.setResultToToast("停止录制报错！"+djiError);
+                            }
+                        }
+                    });
+        }
+    }
+
+    private void record() {
+        if (ModuleVerificationUtil.isCameraModuleAvailable()) {
+            DJISampleApplication.getProductInstance()
+                    .getCamera()
+                    .setMode(SettingsDefinitions.CameraMode.RECORD_VIDEO, new CommonCallbacks.CompletionCallback() {
+                        @Override
+                        public void onResult(DJIError djiError) {
+                            try {
+                                Thread.sleep(1000);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            ToastUtils.setResultToToast("SetCameraMode to recordVideo");
+                            DJISampleApplication.getProductInstance()
+                                    .getCamera()
+                                    .startRecordVideo(new CommonCallbacks.CompletionCallback() {
+                                        @Override
+                                        public void onResult(DJIError djiError) {
+                                            if (djiError == null) {
+                                                try {
+                                                    Thread.sleep(1000);
+                                                } catch (InterruptedException e) {
+                                                    e.printStackTrace();
+                                                }
+                                                startMission();
+
+                                                ToastUtils.setResultToToast("正常开始录制！");
+                                            } else {
+                                                ToastUtils.setResultToToast("开始录制异常！" + djiError.getDescription());
+                                            }
+                                        }
+
+                                    });
+                        }
+
+                    });
+        }
+    }
+
+    private void startMission() {
+        if (mWaypointMission != null) {
+            waypointMissionOperator.startMission(new CommonCallbacks.CompletionCallback() {
+                @Override
+                public void onResult(DJIError djiError) {
+                    showResultToast(djiError);
+                }
+            });
+        } else {
+            ToastUtils.setResultToToast("Prepare Mission First!");
+        }
+    }
+
     //endregion
+    //下载最新的图片视频文件
+    public void downloadLatestFiles(List<MediaFile> mediaFiles) {
+        if (ModuleVerificationUtil.isCameraModuleAvailable()
+                && mediaManager != null) {
+            final File destDir = new File(Environment.getExternalStorageDirectory().
+                    getPath() + "/Dji_Sdk_LatestFiles/");
+            for (final MediaFile mediaFile : mediaFiles) {
+                mediaFile.fetchFileData(destDir, mediaFile.getFileName(), new DownloadHandler<String>() {
+                });
+            }
+
+        }
+    }
 
     //region View Life-Cycle
     @Override

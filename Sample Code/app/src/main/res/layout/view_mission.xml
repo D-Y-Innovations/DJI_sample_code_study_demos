@@ -128,6 +128,12 @@
         android:layout_centerHorizontal="true"
         android:text="MyStop"
         style="@style/common_button"/>
+    <Button
+        android:id="@+id/btn_myAutoMission"
+        android:layout_toRightOf="@id/btn_download"
+        android:layout_below="@id/btn_stop"
+        android:text="Auto Mission"
+        style="@style/common_button"/>
 
     <ProgressBar
         android:id="@+id/pb_mission"

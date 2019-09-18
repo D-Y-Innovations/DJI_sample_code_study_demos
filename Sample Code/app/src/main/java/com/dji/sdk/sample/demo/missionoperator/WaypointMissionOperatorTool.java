@@ -5,6 +5,7 @@ import com.dji.sdk.sample.internal.model.MyWayPoints;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import dji.common.mission.waypoint.Waypoint;
 import dji.common.mission.waypoint.WaypointAction;
@@ -39,10 +40,11 @@ public class WaypointMissionOperatorTool {
         Waypoint startWp=new Waypoint(startPositionBean.getLat()
         ,startPositionBean.getLon(),(float) startPositionBean.getAbsoluteAltitude());
         result.add(startWp);
+        Random random = new Random();
         for (MyWayPoints.GpsListBean gpsListBean : myWayPoints.getGpsList()) {
             Waypoint waypoint=new Waypoint(gpsListBean.getLat(),gpsListBean.getLon(),
                     (float) gpsListBean.getAbsoluteAltitude());
-            if(gpsListBean.getShootPhoto()==1){
+            if(gpsListBean.getShootPhoto() == 1){
                 waypoint.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT,(int)gpsListBean.getYaw()));
                 waypoint.addAction(new WaypointAction(WaypointActionType.GIMBAL_PITCH,(int)gpsListBean.getGimbalPitch()));
                 waypoint.addAction(new WaypointAction(WaypointActionType.START_TAKE_PHOTO,0));

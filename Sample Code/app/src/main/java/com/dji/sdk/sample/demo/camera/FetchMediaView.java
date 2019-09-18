@@ -32,6 +32,7 @@ import java.util.concurrent.Callable;
 public class FetchMediaView extends BaseThreeBtnView {
 
     private MediaFile media;
+    private MediaFile mediaFile;
     private MediaManager mediaManager;
     private FetchMediaTaskScheduler taskScheduler;
     private FetchMediaTask.Callback fetchMediaFileTaskCallback;
@@ -156,31 +157,13 @@ public class FetchMediaView extends BaseThreeBtnView {
         if (ModuleVerificationUtil.isCameraModuleAvailable()
                 && media != null
                 && mediaManager != null) {
-            final File destDir = new File(Environment.getExternalStorageDirectory().
-                    getPath() + "/Dji_Sdk_myTest/");
+
             List<MediaFile> mediaFiles = mediaManager.getSDCardFileListSnapshot();
             //下载SD上的全部文件
-            int i = 0;
-            for(final MediaFile mediaFile : mediaFiles){
-                mediaFile.fetchFileData(destDir, mediaFile.getFileName(), new DownloadHandler<String>() {
-                });
-                i++;
-                ToastUtils.setResultToToast("下载到第"+i+"文件！");
-            }
-            //reset SD
-//            mediaManager.deleteFiles(mediaFiles, new CommonCallbacks.CompletionCallbackWithTwoParam<List<MediaFile>, DJICameraError>() {
-//                @Override
-//                public void onSuccess(List<MediaFile> mediaFiles, DJICameraError djiCameraError) {
-//                    ToastUtils.setResultToToast("重置成功！"+djiCameraError);
-//                }
-//
-//                @Override
-//                public void onFailure(DJIError djiError) {
-//                    ToastUtils.setResultToToast("重置失败！"+djiError);
-//                }
-//            });
+            downloadLatestFiles(mediaFiles);
+            //重置SD卡
+//            resetSD(mediaFiles);
 
-            media.fetchFileData(destDir, "testName", new DownloadHandler<String>());
             media.fetchPreview(new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
@@ -188,6 +171,40 @@ public class FetchMediaView extends BaseThreeBtnView {
                 }
             });
         }
+    }
+
+    //下载最新的图片视频文件
+    public void downloadLatestFiles(List<MediaFile> mediaFiles) {
+        if (ModuleVerificationUtil.isCameraModuleAvailable()
+                && mediaManager != null) {
+            final File destDir = new File(Environment.getExternalStorageDirectory().
+                    getPath() + "/Dji_Sdk_XT2Files/");
+
+            for(int i = 0; i<=10;i++){
+                mediaFile = mediaFiles.get(i);
+               mediaFile.fetchFileData(destDir, mediaFile.getFileName(), new DownloadHandler<String>() {
+                });
+            }
+//            for (final MediaFile mediaFile : mediaFiles) {
+//                mediaFile.fetchFileData(destDir, mediaFile.getFileName(), new DownloadHandler<String>() {
+//                });
+//            }
+
+        }
+    }
+    //重置SD卡
+    public void resetSD(List<MediaFile> mediaFiles) {
+        mediaManager.deleteFiles(mediaFiles, new CommonCallbacks.CompletionCallbackWithTwoParam<List<MediaFile>, DJICameraError>() {
+            @Override
+            public void onSuccess(List<MediaFile> mediaFiles, DJICameraError djiCameraError) {
+                ToastUtils.setResultToToast("重置成功！"+djiCameraError);
+            }
+
+            @Override
+            public void onFailure(DJIError djiError) {
+                ToastUtils.setResultToToast("重置失败！"+djiError);
+            }
+        });
     }
 
     private void setUpListener() {
