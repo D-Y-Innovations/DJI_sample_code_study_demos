@@ -99,12 +99,15 @@ public class XT2CameraView extends LinearLayout implements View.OnClickListener,
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.btn_camera_display_visual:
+                //仅显示可视像
                 setCameraDisplayMode(SettingsDefinitions.DisplayMode.VISUAL_ONLY);
                 break;
             case R.id.btn_camera_display_thermal:
+                //仅显示热成像
                 setCameraDisplayMode(SettingsDefinitions.DisplayMode.THERMAL_ONLY);
                 break;
             case R.id.btn_camera_display_msx:
+                //显示混合成像
                 setCameraDisplayMode(SettingsDefinitions.DisplayMode.MSX);
                 break;
             case R.id.btn_camera_display_msx_level:
@@ -112,9 +115,11 @@ public class XT2CameraView extends LinearLayout implements View.OnClickListener,
                     popupSeekBar.showAtLocation(this, Gravity.CENTER, 0, 0);
                 }
                 break;
+                //设置显示可视相机为主，红外相机为小窗的界面效果
             case R.id.btn_camera_display_pip:
                 setCameraDisplayMode(SettingsDefinitions.DisplayMode.PIP);
                 break;
+                //设置小窗的位置
             case R.id.btn_camera_display_pip_position:
                 if (isValidProduct() && isXT2CameraConnected()) {
                     SettingsDefinitions.PIPPosition[] pipPositions = SettingsDefinitions.PIPPosition.values();
@@ -196,8 +201,8 @@ public class XT2CameraView extends LinearLayout implements View.OnClickListener,
 
     }
 
+    //获取SD能储存的照片数
     private void getPhotoCount() {
-
         KeyManager.getInstance().getValue(CameraKey.create(CameraKey.SDCARD_AVAILABLE_CAPTURE_COUNT), new GetCallback() {
             @Override
             public void onSuccess(@NonNull Object value) {
@@ -305,11 +310,9 @@ public class XT2CameraView extends LinearLayout implements View.OnClickListener,
     private boolean isValidProduct() {
         if (DJISDKManager.getInstance() != null
                 && DJISDKManager.getInstance().getProduct() != null
-                && (DJISDKManager.getInstance().getProduct().getModel() == Model.MATRICE_210
-                || DJISDKManager.getInstance().getProduct().getModel() == Model.MATRICE_200
-                || DJISDKManager.getInstance().getProduct().getModel() == Model.MATRICE_600))
+               )
             return true;
-        ToastUtils.setResultToToast("XT2 can be used with M600, M200 and M210 only.");
+//        ToastUtils.setResultToToast("XT2 can be used with M600, M200 and M210 only.");
         return false;
     }
 }

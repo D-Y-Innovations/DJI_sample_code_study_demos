@@ -20,6 +20,7 @@ import dji.common.error.DJICameraError;
 import dji.common.error.DJIError;
 import dji.common.util.CommonCallbacks;
 import dji.sdk.camera.PlaybackManager;
+import dji.sdk.media.FetchMediaTaskScheduler;
 import dji.sdk.media.MediaFile;
 import dji.sdk.media.MediaManager;
 
@@ -45,15 +46,13 @@ public class MyRecordVideoView extends BaseThreeBtnView{
         super.onAttachedToWindow();
 
         if (ModuleVerificationUtil.isCameraModuleAvailable()) {
-            DJISampleApplication.getProductInstance()
-                    .getCamera()
-                    .setMode(SettingsDefinitions.CameraMode.RECORD_VIDEO,
-                            new CommonCallbacks.CompletionCallback() {
-                                @Override
-                                public void onResult(DJIError djiError) {
-                                    ToastUtils.setResultToToast("SetCameraMode to recordVideo");
-                                }
-                            });
+            if (ModuleVerificationUtil.isMediaManagerAvailable()) {
+                if (mediaManager == null) {
+                    mediaManager = DJISampleApplication.getProductInstance().getCamera().getMediaManager();
+                }
+            } else {
+                changeDescription(R.string.not_support_mediadownload);
+            }
         }
     }
 

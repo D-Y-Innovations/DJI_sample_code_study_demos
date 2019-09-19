@@ -269,6 +269,7 @@ public class WaypointMissionOperatorView extends MissionBaseView {
                 break;
                 //自己写的开始巡航
             case R.id.btn_myStart:
+                getCurrentMediaList();
                 record();
 //                startMission();
                 break;
@@ -411,6 +412,33 @@ public class WaypointMissionOperatorView extends MissionBaseView {
         }
     }
 
+    //获取当前的媒体文件List
+    private List<MediaFile> getCurrentMediaList() {
+        List<MediaFile> mediaFiles = mediaManager.getSDCardFileListSnapshot();
+        return mediaFiles;
+    }
+
+    //下载文件通过对比List
+    private void downloadMediaFilebyList(List<MediaFile> mediaFiles){
+        if (ModuleVerificationUtil.isCameraModuleAvailable()
+                && mediaManager != null) {
+            final File destDir = new File(Environment.getExternalStorageDirectory().
+                    getPath() + "/Dji_Sdk_getFilesByCompareToList/");
+            if (mediaFiles != null) {
+                for (MediaFile mediaFile : mediaFiles) {
+                    mediaFile.fetchFileData(destDir,((mediaFile.getFileName())
+                            .replaceAll(".jpg",""))
+                            .replaceAll(".mov",""),new DownloadHandler<String>());
+                }
+            } else {
+                ToastUtils.setResultToToast("没有新增的文件！");
+            }
+        }
+    }
+
+    //下载文件通过时间戳的方式
+
+    //停止录制
     private void stopRecord() {
         if (ModuleVerificationUtil.isCameraModuleAvailable()) {
             DJISampleApplication.getProductInstance()
@@ -500,7 +528,9 @@ public class WaypointMissionOperatorView extends MissionBaseView {
             final File destDir = new File(Environment.getExternalStorageDirectory().
                     getPath() + "/Dji_Sdk_LatestFiles/");
             for (final MediaFile mediaFile : mediaFiles) {
-                mediaFile.fetchFileData(destDir, mediaFile.getFileName(), new DownloadHandler<String>() {
+                mediaFile.fetchFileData(destDir, ((mediaFile.getFileName())
+                        .replace(".jpg",""))
+                        .replace(".mov",""), new DownloadHandler<String>() {
                 });
             }
 

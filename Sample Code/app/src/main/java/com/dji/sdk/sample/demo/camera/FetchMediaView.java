@@ -3,6 +3,7 @@ package com.dji.sdk.sample.demo.camera;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Environment;
+import android.util.Log;
 
 import com.dji.sdk.sample.R;
 import com.dji.sdk.sample.internal.controller.DJISampleApplication;
@@ -12,6 +13,9 @@ import com.dji.sdk.sample.internal.utils.ToastUtils;
 import com.dji.sdk.sample.internal.view.BaseThreeBtnView;
 
 import dji.common.error.DJICameraError;
+import dji.logic.album.manager.litchis.DJIFileResolution;
+import dji.logic.album.manager.litchis.DJIFileType;
+import dji.logic.album.model.DJIAlbumFileInfo;
 import dji.sdk.media.DownloadListener;
 import dji.sdk.media.FetchMediaTask;
 import dji.sdk.media.FetchMediaTaskContent;
@@ -23,6 +27,9 @@ import java.io.File;
 import dji.common.camera.SettingsDefinitions;
 import dji.common.error.DJIError;
 import dji.common.util.CommonCallbacks;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -30,7 +37,8 @@ import java.util.concurrent.Callable;
  * Class for fetching the media.
  */
 public class FetchMediaView extends BaseThreeBtnView {
-
+    private final String fileProperty = "FileProperty";
+    private final String strDateFormat = "yyyy-MM-dd HH:mm:ss";
     private MediaFile media;
     private MediaFile mediaFile;
     private MediaManager mediaManager;
@@ -180,10 +188,19 @@ public class FetchMediaView extends BaseThreeBtnView {
             final File destDir = new File(Environment.getExternalStorageDirectory().
                     getPath() + "/Dji_Sdk_XT2Files/");
 
-            for(int i = 0; i<=10;i++){
+            for(int i = 0; i<=mediaFiles.size()-1;i++){
                 mediaFile = mediaFiles.get(i);
-               mediaFile.fetchFileData(destDir, mediaFile.getFileName(), new DownloadHandler<String>() {
-                });
+//                getMediaFileProperty(mediaFile);
+                Log.i("StartDownload","开始下载");
+                mediaFile.fetchFileData(destDir,
+                        ((mediaFile.getFileName())
+                                .replace(".jpg",""))
+                                .replace(".mov",""),
+                        new DownloadHandler<String>() {});
+
+                getMediaFileProperty(mediaFile);
+
+
             }
 //            for (final MediaFile mediaFile : mediaFiles) {
 //                mediaFile.fetchFileData(destDir, mediaFile.getFileName(), new DownloadHandler<String>() {
@@ -192,6 +209,25 @@ public class FetchMediaView extends BaseThreeBtnView {
 
         }
     }
+    //获取当前下载文件的一些属性值属性
+    private void getMediaFileProperty(MediaFile mediaFile) {
+        Date date = new Date();
+        date.setTime(mediaFile.getTimeCreated());
+        String timeCreated  = new SimpleDateFormat(strDateFormat).format(date);
+        DJIAlbumFileInfo djiAlbumFileInfo = mediaFile.getInnerFileInfo();
+        DJIFileResolution resolution = djiAlbumFileInfo.resolution;
+        DJIFileType djiFileType = djiAlbumFileInfo.fileType;
+
+        Log.i(fileProperty,"FileIndex:"+mediaFile.getIndex()+","
+                +"SubIndex:"+mediaFile.getSubIndex()+","
+                +"FileName:"+mediaFile.getFileName()+","
+                +"FileSize:"+mediaFile.getFileSize()+","
+                +"videoResolution:"+mediaFile.getResolution()+","
+                +"TimeCreated:"+mediaFile.getDateCreated()+","
+                +"djiFileType:"+djiFileType.toString()+","
+        +"resolution:"+resolution.a()+"_"+resolution.b()+"_"+resolution.c()+"_"+resolution.d());
+    }
+
     //重置SD卡
     public void resetSD(List<MediaFile> mediaFiles) {
         mediaManager.deleteFiles(mediaFiles, new CommonCallbacks.CompletionCallbackWithTwoParam<List<MediaFile>, DJICameraError>() {

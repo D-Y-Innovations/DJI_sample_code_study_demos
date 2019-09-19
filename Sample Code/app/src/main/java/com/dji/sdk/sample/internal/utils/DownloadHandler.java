@@ -1,6 +1,8 @@
 package com.dji.sdk.sample.internal.utils;
 
 import android.graphics.Bitmap;
+import android.util.Log;
+
 import dji.common.error.DJIError;
 import dji.sdk.media.DownloadListener;
 
@@ -25,7 +27,8 @@ public class DownloadHandler<B> implements DownloadListener<B> {
     public void onSuccess(B obj) {
         if (obj instanceof Bitmap) {
             Bitmap bitmap = (Bitmap) obj;
-            ToastUtils.setResultToToast("Success! The bitmap's byte count is: " + bitmap.getByteCount());
+            ToastUtils.setResultToToast("像素："+bitmap.getHeight()+"X"+bitmap.getWidth());
+//            ToastUtils.setResultToToast("Success! The bitmap's byte count is: " + bitmap.getByteCount());
         } else if (obj instanceof String) {
             ToastUtils.setResultToToast("The file has been stored, its path is " + obj.toString());
         }
