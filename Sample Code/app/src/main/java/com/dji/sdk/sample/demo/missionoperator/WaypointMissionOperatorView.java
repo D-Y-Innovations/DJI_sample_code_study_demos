@@ -52,9 +52,12 @@ import dji.sdk.products.Aircraft;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.CallableStatement;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.Callable;
 
 import static dji.keysdk.FlightControllerKey.HOME_LOCATION_LATITUDE;
 import static dji.keysdk.FlightControllerKey.HOME_LOCATION_LONGITUDE;
@@ -74,17 +77,17 @@ public class WaypointMissionOperatorView extends MissionBaseView {
     private final int WAYPOINT_COUNT = 5;
 
     private MediaManager mediaManager;
-    private List<MediaFile> oldMediaFiles;
-    private List<MediaFile> latestMediaFiles;
+    private List<MediaFile> oldMediaFiles ;
+    private  List<MediaFile> latestMediaFiles;
     private FetchMediaTaskScheduler taskScheduler;
+    //获取当前文件最大的Index
+    private int preIndex ;
+    //获取当前系统时间
+    private Date currentTime;
 
     public WaypointMissionOperatorView(Context context) {
         super(context);
     }
-
-
-
-
 
     //region Mission Action Demo
     @Override
@@ -188,6 +191,7 @@ public class WaypointMissionOperatorView extends MissionBaseView {
                 });
                 break;
             case R.id.btn_download:
+
                 // Example of downloading an executing Mission
                 if (WaypointMissionState.EXECUTING.equals(waypointMissionOperator.getCurrentState()) ||
                     WaypointMissionState.EXECUTION_PAUSED.equals(waypointMissionOperator.getCurrentState())) {
@@ -295,9 +299,11 @@ public class WaypointMissionOperatorView extends MissionBaseView {
                 break;
 
             case R.id.btn_myAutoMission:
+//                preIndex = getPreIndex();
+                currentTime = new Date(System.currentTimeMillis());
 
-                //获取当前SD卡中的文件
-                oldMediaFiles = mediaManager.getSDCardFileListSnapshot();
+                oldMediaFiles = getOldList();
+
                 //1.设置相机为录制模式
                 if(ModuleVerificationUtil.isCameraModuleAvailable()){
                     DJISampleApplication.getProductInstance().getCamera()
@@ -347,68 +353,126 @@ public class WaypointMissionOperatorView extends MissionBaseView {
                         }
                     });
                 }
-                mlistener = new WaypointMissionOperatorListener() {
-                    @Override
-                    public void onDownloadUpdate(@NonNull WaypointMissionDownloadEvent waypointMissionDownloadEvent) {
 
-                    }
-
-                    @Override
-                    public void onUploadUpdate(@NonNull WaypointMissionUploadEvent waypointMissionUploadEvent) {
-
-                    }
-
-                    @Override
-                    public void onExecutionUpdate(@NonNull WaypointMissionExecutionEvent waypointMissionExecutionEvent) {
-
-                    }
-
-                    @Override
-                    public void onExecutionStart() {
-
-                    }
-
-                    @Override
-                    public void onExecutionFinish(@Nullable DJIError djiError) {
-                        if (ModuleVerificationUtil.isMediaManagerAvailable()) {
-                            if (mediaManager == null) {
-                                mediaManager = DJISampleApplication.getProductInstance().getCamera().getMediaManager();
-                            }
-                        }
-                        //自动开始下载任务
-                        latestMediaFiles = mediaManager.getInternalStorageFileListSnapshot();
-                        latestMediaFiles.removeAll(oldMediaFiles);
-                        if (taskScheduler == null) {
-                            taskScheduler = mediaManager.getScheduler();
-                            if (taskScheduler != null && taskScheduler.getState() == FetchMediaTaskScheduler.FetchMediaTaskSchedulerState.SUSPENDED) {
-                                taskScheduler.resume(new CommonCallbacks.CompletionCallback() {
-                                    @Override
-                                    public void onResult(DJIError djiError) {
-
-                                        if (djiError != null) {
-                                            ToastUtils.setResultToToast("taskScheduler resume failed: " + djiError.getDescription());
-                                        }
-
-                                    }
-                                });
-                            }
-                        }
-                        DJISampleApplication.getProductInstance()
-                                .getCamera()
-                                .setMode(SettingsDefinitions.CameraMode.MEDIA_DOWNLOAD,
-                                        new CommonCallbacks.CompletionCallback() {
-                                            @Override
-                                            public void onResult(DJIError djiError) {
-                                                if (null == djiError) {
-                                                   downloadLatestFiles(latestMediaFiles);
-                                                }
-                                            }
-                                        });
-                    }
-                };
                 break;
             default:
                 break;
+        }
+    }
+
+    private List<MediaFile> getOldList() {
+        List<MediaFile> oldMediaFiles = mediaManager.getSDCardFileListSnapshot();
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+//                oldMediaFiles = mOldMediaFiles;
+        for(MediaFile mediaFile:oldMediaFiles){
+            Log.i("oldMF:",mediaFile.getFileName());
+        }
+        return oldMediaFiles;
+    }
+
+    public void autoDownload(final int preIndex, final Date currentTime) {
+        if (ModuleVerificationUtil.isCameraModuleAvailable()) {
+            if (ModuleVerificationUtil.isMediaManagerAvailable()) {
+                if (mediaManager == null) {
+                    mediaManager = DJISampleApplication.getProductInstance().getCamera().getMediaManager();
+                }
+                DJISampleApplication.getProductInstance()
+                        .getCamera()
+                        .stopRecordVideo(new CommonCallbacks.CompletionCallback() {
+                            @Override
+                            public void onResult(DJIError djiError) {
+                                if (djiError == null) {
+                                    ToastUtils.setResultToToast("成功停止录制！");
+                                    try {
+                                        Thread.sleep(1000);
+                                    } catch (InterruptedException e) {
+                                        e.printStackTrace();
+                                    }
+                                    if (taskScheduler == null) {
+                                        taskScheduler = mediaManager.getScheduler();
+                                        if (taskScheduler != null && taskScheduler.getState() == FetchMediaTaskScheduler.FetchMediaTaskSchedulerState.SUSPENDED) {
+                                            taskScheduler.resume(new CommonCallbacks.CompletionCallback() {
+                                                @Override
+                                                public void onResult(DJIError djiError) {
+
+                                                    if (djiError != null) {
+                                                        ToastUtils.setResultToToast("taskScheduler resume failed: " + djiError.getDescription());
+                                                    }
+
+                                                }
+                                            });
+                                        }
+                                    }
+                                    try {
+                                        Thread.sleep(1000);
+                                    } catch (InterruptedException e) {
+                                        e.printStackTrace();
+                                    }
+                                    DJISampleApplication.getProductInstance()
+                                            .getCamera()
+                                            .setMode(SettingsDefinitions.CameraMode.MEDIA_DOWNLOAD,
+                                                    new CommonCallbacks.CompletionCallback() {
+                                                        @Override
+                                                        public void onResult(DJIError djiError) {
+                                                            try {
+                                                                Thread.sleep(1000);
+                                                            } catch (InterruptedException e) {
+                                                                e.printStackTrace();
+                                                            }
+                                                            if (null == djiError) {
+                                                                ToastUtils.setResultToToast("成功设置下载模式");
+                                                                mediaManager.refreshFileListOfStorageLocation(SettingsDefinitions.StorageLocation.SDCARD, new CommonCallbacks.CompletionCallback() {
+                                                                    @Override
+                                                                    public void onResult(DJIError djiError) {
+                                                                        try {
+                                                                            Thread.sleep(1000);
+                                                                        } catch (InterruptedException e) {
+                                                                            e.printStackTrace();
+                                                                        }
+                                                                        if (djiError == null) {
+                                                                            if(ModuleVerificationUtil.isCameraModuleAvailable() && mediaManager != null) {
+                                                                                ToastUtils.setResultToToast("开始自动下载");
+                                                                                //自动开始下载任务
+                                                                                latestMediaFiles = mediaManager.getSDCardFileListSnapshot();
+//                                                                            if (!oldMediaFiles.isEmpty()){
+//                                                                                latestMediaFiles.removeAll(oldMediaFiles);
+//                                                                            }
+                                                                                Log.i("old==latest?", String.valueOf(latestMediaFiles.equals(oldMediaFiles)));
+                                                                                for (MediaFile mediaFile : oldMediaFiles) {
+                                                                                    Log.i("old", mediaFile.getFileName());
+                                                                                }
+                                                                                for (MediaFile mediaFile : latestMediaFiles) {
+                                                                                    Log.i("latest", mediaFile.getFileName());
+                                                                                }
+                                                                                //第一种方式
+                                                                                downloadByCompareToFileList(latestMediaFiles);
+                                                                                //第二种方式
+//                                                                            downloadByCompareToFileIndex(preIndex);
+                                                                                //第三种方式
+//                                                                                downloadByCompareToTimeStamp(currentTime);
+                                                                            }
+                                                                        }else {
+                                                                            ToastUtils.setResultToToast("刷新:"+djiError.getDescription());
+                                                                        }
+                                                                    }
+                                                                });
+                                                            }else {
+                                                                ToastUtils.setResultToToast("模式不支持"+djiError.getDescription());
+                                                            }
+                                                        }
+                                                    });
+                                }else{
+                                    ToastUtils.setResultToToast("停止录制失败！"+djiError.getDescription());
+                                    Log.i("StopRecord:",djiError.getDescription());
+                                }
+                            }
+                        });
+            } else {
+            }
         }
     }
 
@@ -447,7 +511,6 @@ public class WaypointMissionOperatorView extends MissionBaseView {
                         @Override
                         public void onResult(DJIError djiError) {
                             if(djiError == null){
-
                                 ToastUtils.setResultToToast("正常停止录制！");
                                 if (ModuleVerificationUtil.isCameraModuleAvailable()) {
                                     DJISampleApplication.getProductInstance()
@@ -522,20 +585,116 @@ public class WaypointMissionOperatorView extends MissionBaseView {
 
     //endregion
     //下载最新的图片视频文件
-    public void downloadLatestFiles(List<MediaFile> mediaFiles) {
-        if (ModuleVerificationUtil.isCameraModuleAvailable()
-                && mediaManager != null) {
+    public void downloadByCompareToFileList(List<MediaFile> mediaFiles) {
+        Log.i("filenameone","执行了！"+mediaFiles.size());
             final File destDir = new File(Environment.getExternalStorageDirectory().
-                    getPath() + "/Dji_Sdk_LatestFiles/");
+                    getPath() + "/List_file/");
             for (final MediaFile mediaFile : mediaFiles) {
+                Log.i("filenameone",mediaFile.getFileName());
                 mediaFile.fetchFileData(destDir, ((mediaFile.getFileName())
                         .replace(".jpg",""))
                         .replace(".mov",""), new DownloadHandler<String>() {
                 });
-            }
+
 
         }
     }
+
+    //下载最新代码通过获取时间戳
+    public void downloadByCompareToTimeStamp(Date date){
+        if(ModuleVerificationUtil.isCameraModuleAvailable() && mediaManager != null){
+            final File destDir = new File(Environment.getExternalStorageDirectory()
+                    .getPath()+"/DJI_Time_file/");
+            List<MediaFile> mediaFiles = mediaManager.getSDCardFileListSnapshot();
+            for(final MediaFile mediaFile : mediaFiles){
+                Date fileDate = new Date();
+                fileDate.setTime(mediaFile.getTimeCreated());
+                if(date.compareTo(fileDate)<0){
+                    Log.i("filenametwo",mediaFile.getFileName());
+                    mediaFile.fetchFileData(destDir,((mediaFile.getFileName())
+                            .replace(".jpg",""))
+                            .replace(".mov",""),new DownloadHandler<String>());
+                }
+            }
+        }
+    }
+
+    //下载文件通过对比File的index
+    public void downloadByCompareToFileIndex(int preIndex){
+        Log.i("filenamethree",String.valueOf(preIndex));
+        final File destDir = new File(Environment.getExternalStorageDirectory()
+                .getPath()+"/Index_file/");
+        List<MediaFile> mediaFiles = mediaManager.getSDCardFileListSnapshot();
+        for(final MediaFile mediaFile : mediaFiles){
+            if(mediaFile.getIndex() > preIndex){
+                Log.i("filenamethree",mediaFile.getFileName()+mediaFile.getIndex());
+                mediaFile.fetchFileData(destDir,((mediaFile.getFileName())
+                        .replace(".jpg",""))
+                        .replace(".mov",""),new DownloadHandler<String>());
+            }
+        }
+
+    }
+
+    //获取起飞前的最大的FileIndex
+    private int getPreIndex()  {
+        if (ModuleVerificationUtil.isMediaManagerAvailable()) {
+            if (mediaManager == null) {
+                mediaManager = DJISampleApplication.getProductInstance().getCamera().getMediaManager();
+
+                if (taskScheduler == null) {
+                    taskScheduler = mediaManager.getScheduler();
+                    if (taskScheduler != null && taskScheduler.getState() == FetchMediaTaskScheduler.FetchMediaTaskSchedulerState.SUSPENDED) {
+                        taskScheduler.resume(new CommonCallbacks.CompletionCallback() {
+                            @Override
+                            public void onResult(DJIError djiError) {
+
+                                if (djiError != null) {
+                                    ToastUtils.setResultToToast("taskScheduler resume failed: " + djiError.getDescription());
+                                }
+
+                            }
+                        });
+                    }
+                }
+
+                DJISampleApplication.getProductInstance()
+                        .getCamera()
+                        .setMode(SettingsDefinitions.CameraMode.MEDIA_DOWNLOAD,
+                                new CommonCallbacks.CompletionCallback() {
+                                    @Override
+                                    public void onResult(DJIError djiError) {
+                                        try {
+                                            Thread.sleep(1000);
+                                        } catch (InterruptedException e) {
+                                            e.printStackTrace();
+                                        }
+                                        if (null == djiError) {
+
+
+
+                                        }else {
+                                            ToastUtils.setResultToToast("模式不支持"+djiError.getDescription());
+                                        }
+                                    }
+                                });
+
+
+                List<MediaFile> mediaFiles = mediaManager.getSDCardFileListSnapshot();
+                if(mediaFiles.isEmpty()){
+                    Log.i("PPPPPPPPPPP:","media是空的");
+                    return 0;
+                }
+                for(MediaFile mediaFile:mediaFiles){
+                    preIndex = Math.max(preIndex,mediaFile.getIndex());
+                    Log.i("PPPPPPPPPPP:","ansdn.kasndansd");
+                }
+                Log.i("preIndex:", "asbdakj,dabkj.");
+            }
+        }
+        return preIndex;
+    }
+
 
     //region View Life-Cycle
     @Override
@@ -567,6 +726,52 @@ public class WaypointMissionOperatorView extends MissionBaseView {
             }
         }
         waypointMissionOperator = MissionControl.getInstance().getWaypointMissionOperator();
+        if (ModuleVerificationUtil.isMediaManagerAvailable()) {
+            if (mediaManager == null) {
+                mediaManager = DJISampleApplication.getProductInstance().getCamera().getMediaManager();
+
+            }
+        }
+
+//       preIndex = getPreIndex();
+
+        if (ModuleVerificationUtil.isCameraModuleAvailable()) {
+            if (ModuleVerificationUtil.isMediaManagerAvailable()) {
+                if (mediaManager == null) {
+                    mediaManager = DJISampleApplication.getProductInstance().getCamera().getMediaManager();
+                }
+
+                if (taskScheduler == null) {
+                    taskScheduler = mediaManager.getScheduler();
+                    if (taskScheduler != null && taskScheduler.getState() == FetchMediaTaskScheduler.FetchMediaTaskSchedulerState.SUSPENDED) {
+                        taskScheduler.resume(new CommonCallbacks.CompletionCallback() {
+                            @Override
+                            public void onResult(DJIError djiError) {
+
+                                if (djiError != null) {
+                                    ToastUtils.setResultToToast("taskScheduler resume failed: " + djiError.getDescription());
+                                }
+
+                            }
+                        });
+                    }
+                }
+
+                DJISampleApplication.getProductInstance()
+                        .getCamera()
+                        .setMode(SettingsDefinitions.CameraMode.MEDIA_DOWNLOAD,
+                                new CommonCallbacks.CompletionCallback() {
+                                    @Override
+                                    public void onResult(DJIError djiError) {
+                                        if (null == djiError) {
+                                            fetchMediaList();
+                                        }
+                                    }
+                                });
+            } else {
+               ToastUtils.setResultToToast(String.valueOf(R.string.not_support_mediadownload));
+            }
+        }
         setUpListener();
     }
 
@@ -738,8 +943,32 @@ public class WaypointMissionOperatorView extends MissionBaseView {
 
             @Override
             public void onExecutionFinish(@Nullable DJIError djiError) {
-                ToastUtils.setResultToToast("Execution finished!");
+
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                ToastUtils.setResultToToast("Execution finished!"+preIndex);
                 updateWaypointMissionState();
+                flightController.startGoHome(new CommonCallbacks.CompletionCallback() {
+                    @Override
+                    public void onResult(DJIError djiError) {
+                        if(djiError == null){
+                            ToastUtils.setResultToToast("成功返航！");
+                            try {
+                                Thread.sleep(1000);
+                                autoDownload(preIndex,currentTime);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }else{
+                            ToastUtils.setResultToToast("未成功返航："+djiError.getDescription());
+                        }
+                    }
+                });
+
             }
         };
 
@@ -747,6 +976,7 @@ public class WaypointMissionOperatorView extends MissionBaseView {
             // Example of adding listeners
             waypointMissionOperator.addListener(listener);
         }
+
     }
 
     private void tearDownListener() {
@@ -766,4 +996,31 @@ public class WaypointMissionOperatorView extends MissionBaseView {
     }
 
     //endregion
+
+    private void fetchMediaList() {
+        if (ModuleVerificationUtil.isMediaManagerAvailable()) {
+            if (mediaManager != null) {
+                mediaManager.refreshFileListOfStorageLocation(SettingsDefinitions.StorageLocation.SDCARD, new CommonCallbacks.CompletionCallback() {
+                    @Override
+                    public void onResult(DJIError djiError) {
+                        String str;
+                        if (null == djiError) {
+                            List<MediaFile> djiMedias = mediaManager.getSDCardFileListSnapshot();
+
+                            if (null != djiMedias) {
+                               preIndex = djiMedias.get(djiMedias.size()-1).getIndex();
+
+                                } else {
+                                    str = "No Media in SD Card";
+
+                                }
+
+                        } else {
+                           ToastUtils.setResultToToast(djiError.getDescription());
+                        }
+                    }
+                });
+            }
+        }
+    }
 }

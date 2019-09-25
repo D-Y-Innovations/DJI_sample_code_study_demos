@@ -15,12 +15,12 @@ public class DownloadHandler<B> implements DownloadListener<B> {
 
     @Override
     public void onRateUpdate(long total, long current, long arg2) {
-
+//        ToastUtils.setResultToToast("已下载："+"current / total" + "%"+arg2);
     }
 
     @Override
     public void onProgress(long total, long current) {
-
+//        ToastUtils.setResultToToast("已下载："+"current / total" + "%");
     }
 
     @Override

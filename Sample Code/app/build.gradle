@@ -68,5 +68,7 @@ dependencies {
     implementation 'com.android.support.constraint:constraint-layout:1.1.3'
     implementation 'com.android.support:design:27.1.1'
     compileOnly 'com.dji:dji-sdk-provided:4.10'
+    // https://mvnrepository.com/artifact/com.drewnoakes/metadata-extractor
+    implementation group: 'com.drewnoakes', name: 'metadata-extractor', version: '2.12.0'
 
 }
