@@ -182,7 +182,6 @@ public class FetchMediaView extends BaseThreeBtnView {
             //重置SD卡
 //            resetSD(mediaFiles);
             //从文件头中获取Image desc信息(第一种方式)
-//            getFileExif("drawable-hdpi/a0007.jpg");
             //从文件头中获取Image desc信息(第二种方式)
 //            getFileMedata();
 //            getMedataLog();
