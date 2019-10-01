@@ -102,7 +102,7 @@ public class MyWayPointMissionActivity extends AppCompatActivity implements View
                 List<Waypoint> mList = null;
 
                 mList =  waypointMissionOperatorTool.getDjiWayPointFromMyWayPoints(loadByAndroid("test.txt"));
-                mWaypointMission = waypointMissionOperatorTool.ctreateWaypointMission(mList);
+                mWaypointMission = waypointMissionOperatorTool.createWaypointMission(mList);
                 //上传任务
                 if (WaypointMissionState.READY_TO_RETRY_UPLOAD.equals(mWaypointMissionOperator.getCurrentState())
                         || WaypointMissionState.READY_TO_UPLOAD.equals(mWaypointMissionOperator.getCurrentState())) {

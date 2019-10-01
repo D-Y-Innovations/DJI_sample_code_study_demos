@@ -39,6 +39,7 @@ public abstract class MissionBaseView extends RelativeLayout implements View.OnC
     protected Button myStart;
     protected Button myStop;
     protected Button myAutoMission;
+    protected Button myAuto;
 
     protected TextView missionPushInfoTV;
     protected TextView FCPushInfoTV;
@@ -96,6 +97,7 @@ public abstract class MissionBaseView extends RelativeLayout implements View.OnC
         myStart = findViewById(R.id.btn_myStart);
         myStop = findViewById(R.id.btn_myStop);
         myAutoMission = findViewById(R.id.btn_myAutoMission);
+        myAuto = findViewById(R.id.btn_AutoMission);
 
 
         loadBtn.setOnClickListener(this);
@@ -114,6 +116,7 @@ public abstract class MissionBaseView extends RelativeLayout implements View.OnC
         myStart.setOnClickListener(this);
         myStop.setOnClickListener(this);
         myAutoMission.setOnClickListener(this);
+        myAuto.setOnClickListener(this);
 
     }
 

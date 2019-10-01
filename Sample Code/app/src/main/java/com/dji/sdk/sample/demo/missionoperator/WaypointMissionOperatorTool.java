@@ -58,7 +58,7 @@ public class WaypointMissionOperatorTool {
     }
 
     //创建路点任务
-    public WaypointMission ctreateWaypointMission(List<Waypoint> waypointArray){
+    public WaypointMission createWaypointMission(List<Waypoint> waypointArray){
         WaypointMission.Builder builder = new WaypointMission.Builder();
         builder.autoFlightSpeed(5f);
         builder.maxFlightSpeed(10f);
@@ -68,6 +68,7 @@ public class WaypointMissionOperatorTool {
         builder.gotoFirstWaypointMode(WaypointMissionGotoWaypointMode.SAFELY);
         builder.headingMode(WaypointMissionHeadingMode.AUTO);
         builder.repeatTimes(1);
+
 
         //将坐标集合给任务
         builder.waypointList(waypointArray).waypointCount(waypointArray.size());

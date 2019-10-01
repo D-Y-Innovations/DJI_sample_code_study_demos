@@ -308,4 +308,51 @@
     <string name="my_shoot_photo_button">Shoot Photo</string>
     <string name="my_download_photo_button">Download Photo</string>
 
+    <!-- Waypoints.txt -->
+    <string name="my_way_points">
+        {\n" +
+                        "   \"startPosition\": {\n" +
+                        "        \"absoluteAltitude\": 76.54328155517578,\n" +
+                        "        \"gimbalPitch\": 0,\n" +
+                        "        \"lat\": 22.589992518798812,\n" +
+                        "        \"lon\": 113.98004457818286,\n" +
+                        "        \"yaw\": 0\n" +
+                        "    },\n" +
+                        "    \"gpsList\": [\n" +
+                        "        {\n" +
+                        "            \"absoluteAltitude\": 76.08706665039062,\n" +
+                        "            \"gimbalPitch\": -90.4000015258789,\n" +
+                        "            \"lat\": 22.589784056531727,\n" +
+                        "            \"lon\": 113.98036856346226,\n" +
+                        "            \"shootPhoto\": 0,\n" +
+                        "            \"yaw\": 134.20000004768372\n" +
+                        "        },\n" +
+                        "        {\n" +
+                        "            \"absoluteAltitude\": 76.23529815673828,\n" +
+                        "            \"gimbalPitch\": -180.80000305175781,\n" +
+                        "            \"lat\": 22.589431030194767,\n" +
+                        "            \"lon\": 113.98069291229368,\n" +
+                        "            \"shootPhoto\": 0,\n" +
+                        "            \"yaw\": 155.70000004768372\n" +
+                        "        },\n" +
+                        "        {\n" +
+                        "            \"absoluteAltitude\": 76.06767272949219,\n" +
+                        "            \"gimbalPitch\": -90.9000015258789,\n" +
+                        "            \"lat\": 22.58931317982019,\n" +
+                        "            \"lon\": 113.98039819095852,\n" +
+                        "            \"shootPhoto\": 0,\n" +
+                        "            \"yaw\": 154.59999990463257\n" +
+                        "        }\n" +
+                        "    ],\n" +
+                        "    \"endPosition\": {\n" +
+                        "        \"absoluteAltitude\": 76.25504302978516,\n" +
+                        "        \"gimbalPitch\": 0.9000015258789,\n" +
+                        "        \"lat\": 22.58946024179878,\n" +
+                        "        \"lon\": 113.98026310755915,\n" +
+                        "        \"yaw\": 126\n" +
+                        "    }\n" +
+                        "  \n" +
+                        "}
+    </string>
+
 </resources>
